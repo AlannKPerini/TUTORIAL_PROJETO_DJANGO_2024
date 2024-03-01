@@ -385,7 +385,7 @@ Crie um arquivo `urls.py` para podermos gerar as rotas personalizadas em `**clie
 
 As Urls são as rotas para que o sistema identifique aonde procruar as rotinas de sistema que acabamos de criar no passo 6.
 
-A diante vamos criar os templates de Front-End para manipular todo nosso sistema, mas antes conseguios definir os nome dos formulários e páginas que terão em nosso sistemas.
+A diante vamos criar os templates de Front-End para manipular todo nosso sistema, mas antes precisamos definir os nome dos formulários e páginas que terão em nosso sistemas.
 
 ``` shell
 from django.urls import path
@@ -419,7 +419,7 @@ ou https://www.w3schools.com/bootstrap5/index.php
 
 - Segue o modelo de estrutura de pastas que ficará após essas orientações. 
 
-![](/img/telasweb.PNG)
+![](/img/telas_da_web.PNG)
 
 Na pasta templates vamos criar um arquivo que servirá de base para todo nosso projeto. 
 

@@ -21,13 +21,26 @@ Para usuários de distribuições **Linux**, recomendamos consultar a documenta�
 
 # Processo de Instalação e configuração Inicial do Ambiente de Desenvolvimento Django.
 
-# Passo 1: Instalação do Django e do PIP
+# Passo 1: Instalação do Python, Django e do PIP
 
-**Crie uma pasta para seu projeto com o nome projeto_django_bosch**
+**Crie uma pasta para seu projeto com o nome projeto_django_crud**
 
 **Abra a pasta no Vscode e siga as instruções**
 
 **Abra o terminal do VSCode e digite os comandos listados abaixo.**
+
+```shell
+py --version
+```
+Se você não tiver o Python instalado precisa entrar no site oficial, baixar o Python e fazer a instalação na máquina, somente após a instalação do Python siga as instruções abaixo;
+
+https://www.python.org/downloads/
+
+
+No VSCode instale as extesão do Python para que ele reconheça os arquivos python que vai criar neste projeto, adiante iremos acrescentar outras extensões.  
+
+-   [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+
 
 # Instalação e configuração do PIP
 
@@ -54,6 +67,12 @@ Execute o comando abaixo no **PowerShell** (No Terminal do `VS Code`):
 ```shell
  python.exe -m pip install --upgrade pip
 ```
+Uma outra forma de instalar o pip e atualizar: 
+
+```shell
+ py -m pip install --upgrade pip
+```
+
 **1.2 Crie um ambiente virtual para instalação e configuração do seu projeto através das depedências e bibliotecas espefíficas.**
 
 O módulo usado para criar e gerenciar ambientes virtuais é chamado venv. O venv normalmente irá instalar a versão mais recente de Python que você tiver disponível.
@@ -116,8 +135,8 @@ Esse é o número do servidor web local(padrão) para abrir a aplicação web. T
 
 -   Verifique se o projeto está rodando:
 
-    -   Página inicial: http://localhost:8000
-    -   `Admin`: http://localhost:8000/admin
+    -   `Página inicial:` http://localhost:8000
+  
 
 -   Ao rodar o projeto pela primeira vez, o arquivo `db.sqlite3` é criado conforme a imagem abaixo. 
 
@@ -138,7 +157,7 @@ Para sair fechar a aplicação no servidor é só usar o seguinte atalho:
 Eu recomendo as seguintes:
 
 -   [Django(Formatação de código)](https://marketplace.visualstudio.com/items?itemName=batisteo.vscode-django)
--   [SqLite Viewer (Visualização de bancos de dados SQLite)](https://marketplace.visualstudio.com/items?itemName=alexcvzz.vscode-sqlite)
+-   [SqLite Viewer (Visualização de bancos de dados SQLite)](https://marketplace.visualstudio.com/items?itemName=qwtel.sqlite-viewer)
 -   [isort (Organização de imports)](https://marketplace.visualstudio.com/items?itemName=Tyriar.sort-lines)
 -   [Black Formatter(Formatação de código)](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance)
 -   [Git Extension Pack(Trabalhando com GitHub)](https://marketplace.visualstudio.com/items?itemName=donjayamanne.git-extension-pack)
@@ -200,9 +219,7 @@ pip install pre-commit
 
 -   Crie um arquivo `.isort.cfg` na raiz do projeto:
 
-```shell
-touch .isort.cfg
-```
+
 
 -   Abra o arquivo `.isort.cfg` e coloque o seguinte conteúdo:
 

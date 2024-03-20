@@ -319,7 +319,6 @@ class Cliente(models.Model):
         return self.nome
   ```
 
-
 # Passo 4: Depois de definir o modelo, execute as migrações para criar a tabela no banco de dados:
 
 O comando `makemigrations` analisa se foram feitas mudanças nos modelos e, em caso positivo, cria novas migrações `(Migrations)` para alterar a estrutura do seu banco de dados, refletindo as alterações feitas.
@@ -638,3 +637,564 @@ Agora você deve ser capaz de acessar seu aplicativo **CRUD de Cliente** no nave
 http://localhost:8000/clientes/.
 
 Você também pode acessar outras URLs definidas, como criar, editar e excluir clientes.
+
+# Passo 10 - Criação da API Funcionarios:
+
+Agora que você entendeu como funciona a criação do projeto Api Rest de cliente, vamos praticar criando funcinarios.
+Nesta etapa vou apresentar algums elementos de estilos css e outros do BoostStrap para ficar mais interessante o projeto. Servindo de base para que você possa implementar e criar outras funcionalidades. 
+Também será implementado uma função JavaScript para trabalhar com imagem. 
+
+Lembre-se que você precisa criar quase todas as etapas iniciais que fizemos a partir do **PASSO 2**
+
+ - Agora, crie um aplicativo dentro do projeto empresa. 
+
+- Os aplicativos são componentes reutilizáveis do Django que podem conter modelos, visualizações, URLs e templates. 
+
+- Neste exemplo, vamos criar uma aplicação chamada "funcionarios":
+
+``` shell 
+python manage.py startapp funcionarios
+  ```
+ou 
+``` shell 
+py manage.py startapp funcionarios
+  ```
+
+Após a criação da aplicação funcionarios, foi criada uma pasta com todos os arquivos de configuração do Django para sua aplicação funcione, semelhante a que fizemos com clientes.
+
+![](/img/funcionario.PNG)
+
+Abra o arquivo **settings.py** no diretório do projeto (empresa) e adicione o nome do aplicativo "funcionarios" à lista **INSTALLED_APPS:**
+
+  ``` shell 
+INSTALLED_APPS = [
+    # ...
+    'clientes',
+    'funcionarios',
+    # ...
+]
+  ```
+
+  # Passo 11: Definir o Modelo de Funcionario:
+
+Nesta etapa iremos configurar nossa classe Cliente com os seguintes atributos: **nome_completo, edv, cargo, setor, endereço, horário de entrada, horário de saída, data de admissão, foto.**
+
+Iremos seguir o tipo de variáveis conforme o tipo do atributo. Veja o exemplo a seguir: 
+
+Abra o **arquivo funcionarios/models.py** e defina o modelo de Funcionario:
+
+  ``` shell
+from django.db import models
+
+class Funcionario(models.Model):
+    nome_completo = models.CharField(max_length=100)
+    edv = models.CharField(max_length=20, unique=True)
+    cargo = models.CharField(max_length=100)
+    setor = models.CharField(max_length=100)
+    endereco = models.TextField()
+    horario_entrada = models.TimeField()
+    horario_saida = models.TimeField()
+    data_admissao = models.DateField()
+    foto = models.ImageField(null=True, blank=True)  # Campo para a foto
+
+    def __str__(self):
+        return self.nome_completo
+  ```
+# Passo 12: Depois de definir o modelo, execute as migrações para criar a tabela no banco de dados:
+
+- No terminal vc precisa digitar os seguintes comandos para executar as migrações.
+
+``` shell
+python manage.py makemigrations
+  ```
+- Agora na sequência execute o código abaixo para efetivar as novas migrações no sistema e banco.
+
+``` shell
+python manage.py migrate
+  ```
+
+# Passo 13: Criar um Formulário para Funcionarios:
+
+Crie um arquivo `forms.py` para podermos gerar um formulário personalizado em **funcionarios/forms.py:**
+Após criar o arquivo utilize os código abaixo com a estrutura definida para funcionarios. 
+
+``` shell
+from django import forms
+from .models import Funcionario
+
+class FuncionarioForm(forms.ModelForm):
+    class Meta:
+        model = Funcionario
+        fields = ['nome_completo', 'edv', 'cargo', 'setor', 'endereco', 'horario_entrada', 'horario_saida','data_admissao','foto']
+
+```
+
+# Passo 14: Criar uma View para o CRUD Funcionarios:
+
+- Em **funcionarios/views.py**, crie views para listar, criar, editar e excluir funcionarios:
+
+``` shell
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Funcionario
+from .forms import FuncionarioForm
+
+def lista_funcionarios(request):
+    funcionarios = Funcionario.objects.all()
+    return render(request, 'funcionarios/lista_funcionarios.html', {'funcionarios': funcionarios})
+
+def cria_funcionario(request):
+    if request.method == 'POST':
+        form = FuncionarioForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('lista_funcionarios')
+    else:
+        form = FuncionarioForm()
+    return render(request, 'funcionarios/cria_funcionario.html', {'form': form})
+
+def edita_funcionario(request, pk):
+    funcionario = get_object_or_404(Funcionario, pk=pk)
+    if request.method == 'POST':
+        form = FuncionarioForm(request.POST, request.FILES, instance=funcionario)
+        if form.is_valid():
+            form.save()
+            return redirect('lista_funcionarios')
+    else:
+        form = FuncionarioForm(instance=funcionario)
+    return render(request, 'funcionarios/edita_funcionario.html', {'form': form, 'funcionario': funcionario})
+
+def deleta_funcionario(request, pk):
+    funcionario = get_object_or_404(Funcionario, pk=pk)
+    funcionario.delete()
+    return redirect('lista_funcionarios')
+```
+
+# Passo 15: Configurar URLs para Funcionarios:
+
+Em `**funcionarios/urls.py**`, defina as URLs para as views:
+
+Crie um arquivo `urls.py` para podermos gerar as rotas personalizadas em `**funcionarios/urls.py:**`
+
+A diante vamos criar os templates de Front-End para manipular todo nosso sistema, mas antes precisamos definir os nome dos formulários e páginas que terão em nosso sistemas.
+
+``` shell
+from django.urls import path
+from . import views
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns = [
+    path('funcionarios/', views.lista_funcionarios, name='lista_funcionarios'),  # URL para listar funcionários
+    path('novo/', views.cria_funcionario, name='cria_funcionario'),
+    path('editar/<int:pk>/', views.edita_funcionario, name='edita_funcionario'),
+    path('deletar/<int:pk>/', views.deleta_funcionario, name='deleta_funcionario'),
+]
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+```
+Veja que neste momento usamos uma função adcional para trabalhar com "foto" em nossa aplicação.
+
+A função **static()** é usada para definir as URLs estáticas, como as URLs que fornecem acesso aos arquivos CSS, JavaScript, imagens, etc. Ela recebe dois parâmetros:
+
+- **settings.STATIC_URL:** O prefixo da URL para servir arquivos estáticos.
+
+- **settings.STATIC_ROOT:** O diretório onde os arquivos estáticos estão localizados no sistema de arquivos.
+
+O Django adiciona essas URLs estáticas às suas urlpatterns, permitindo que os arquivos estáticos sejam servidos pelo servidor de desenvolvimento do Django.
+
+# Passo 16: Conectar URLs do Aplicativo Principal:
+
+Em `empresa/urls.py`, conecte as URLs do aplicativo `"funcionarios"`:
+
+Lembrando que `EMPRESA` é o nome do projeto que criamos lá no início.
+- Você deverá acrescentar(atulizar o arquivo) agora com as urls de funcionarios.
+
+``` shell
+from django.contrib import admin
+from django.urls import path, include
+from django.shortcuts import redirect, render
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('clientes/', include('clientes.urls')),
+    path('funcionarios/', include('funcionarios.urls')),  # acrescentando urls de funcionarios.
+    path('sobre/', lambda request: render(request, 'clientes/sobre.html'), name='sobre'),  # acrescentando a página sobre em clientes.
+    path('', lambda request: redirect('lista_clientes'), name='home'),   
+]
+
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) # acrescentando urlpatterns para arquivos statics neste caso usando a foto em funcionarios.
+
+```
+
+
+
+# Desenvolvendo o FRONT END de Funcionarios
+# Passo 8: Criação de Templates HTML:
+
+Neste ponto nós temos uma **`Estrutura BackEnd de Funcionarios`** está pronta para ser usada mas precisamos do Tela para que o usuário possa fazer as interações com o Sistema.
+
+Para isso a princípio vamos utilizar uma formatação básica de Html e Css para criação de páginas de Internet usando o **`Bootstrap.`** e **`JavaScript.`** 
+
+- **Crie uma pasta chamada `templates` no diretório do aplicativo `"funcionarios"`. Dentro da pasta templates, `crie outra pasta chamada funcionarios`.**
+
+- Crie templates HTML em **`funcionarios/templates/funcionarios`** para listar, criar, editar e excluir clientes. Você pode usar o **Bootstrap** ou outros estilos CSS para estilizar os templates, conforme necessário.
+
+- Segue o modelo de estrutura de pastas que ficará após essas orientações. 
+
+![](/img/templates_funcionarios.PNG)
+
+
+- **`IMPORTANTE`**
+Para trabalhar com arquivos estáticos do JS(JavaScript) e Css é necessário que vc implemente alguns arquivos importantes nas configurações. 
+
+No arquivo `"settings.py"` do projeto `"empresa"` você irá definir a seguinte configuração abaixo `"Static filles"` conforme o exemplo abaixo. 
+``` shell
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.0/howto/static-files/
+
+STATIC_URL = '/static/'
+
+# Local onde os arquivos estáticos são coletados durante a produção
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Local onde os arquivos estáticos são encontrados durante o desenvolvimento
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'clientes', 'static'),
+]
+```
+
+Após essa implementação é necessário instalar essa biblioteca; 
+``` shell
+py pip install whitenoise
+  ```
+ - Após esses ajustes segue as instruções abaixo.
+  
+- Os arquivos HTMl de funcionarios segue as instruções abaixo. 
+
+- Usaremos os seguintes modelos para templates de funcionarios, crie cada arquivo HTML conforme os nomes abaixo:
+
+- **`lista_funcionarios.html`** Template para listar funcionarios.
+
+- **`cria_funcionario.html`** Template para criar um novo funcionarios.
+
+ - **`edita_funcionario.html`** Template para editar um funcionarios existente.
+
+- **`exclui_funcionario.html`** Template para confirmar a exclusão de um funcionarios.
+
+
+Em cada template HTML, estenda o template **`base.html`** que será o mesmo que temos em **`cliente`**, **não é necessário criar um novo arquivo base em funcionários.** 
+
+- **`IMPORTANTE`**
+
+No Arquivo **Base**, **`clientes\base.html`** Template base para todo projeto. Essa estrutura será usada para todo os outros arquivos htmls de funcionário criado neste projeto. Ou seja Cliente e Funcionario irão executar suas respectivas funções nas mesma **Base** de todo projeto, portanto seria uma estrutura única.
+
+Esclaredido essa parte segue para o código **`clientes\base.html`** para fazer as atualizações e implementar os novos menus de funcionário e a página **`clientes\sobre.html`** que será criada no final desta etapa. 
+
+# Código do arquivo base.html com novas alterações:
+
+
+``` shell
+<!DOCTYPE html>
+{% load static %}   /* Esse comando carrega o static para usar imagens na página */
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA DE CLIENTES</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" 
+    rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+     </head> 
+             
+     <style>
+             /*Código abaixo foi implementado um estilo específico para trabalhar apenas com essa página base usando a tag <style>
+            Lembrando que vc poderá usar as cores e formatações de sua preferência*/
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 250px; /* Largura da barra lateral */
+            height: 100%;
+            background-color: #0C314A; /* Cor de fundo da barra lateral  */
+            padding-top: 20px; /* Espaçamento superior */
+        }
+    
+        .content {
+            margin-left: 250px; /*Largura da barra lateral */
+            padding: 20px; /*Espaçamento interno do conteúdo */
+        }
+    
+        .nav-link {
+            color: white;
+            text-align: center;
+            padding: 5px; /* Espaçamento interno dos itens de menu */
+            border-radius: 5px; /* Adiciona bordas arredondadas */
+            border: 2px solid red; /* Adiciona uma borda vermelha */
+            margin-bottom: 5px; /* Espaçamento inferior entre os itens de menu */
+            margin: 5px 0; /* Espaçamento vertical e horizontal menor */
+        }
+    </style>   
+      
+</head>
+<body>
+    <div class="sidebar">
+        <!-- Formatação Logo -->
+        <div class="text-center">
+            <img src="{% static 'logo.png' %}" alt="Logo" class="logo" style="width: 200px; height: 50px;">
+        </div>
+        
+        <!-- Menu -->
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link " href="{% url 'home' %}">Início</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'cria_cliente'%}">Clientes</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'lista_funcionarios' %}">Funcionários</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'sobre' %}">Sobre</a>
+            </li>
+           
+        </ul>
+    </div>
+
+    <div class="content">
+            {% block content %}
+       {% endblock %}
+    </div>
+
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
+```
+
+Dentro da pasta `templates/funcionarios` coloque os códigos abaixo conforme cada arquivo.
+# Código do arquivo cria_funcionario.html:
+- Neste arquivo foi implementado alguns scripts personalizados dos forms e implmentação de javaScript para tratamento de imagem. 
+- O `JavaScript` implementado nesta etapa ele seleciona a imagem na sua pasta de arquivos, da um preview da foto no formato 3x4 e grava no banco de dados juntamente com outras informações.
+
+``` shell
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1>Cadastro de Novo Funcionário</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col">
+                <div class="form-group">
+                    <label for="id_nome_completo">Nome Completo:</label>
+                    <input type="text" class="form-control" id="id_nome_completo" name="nome_completo" placeholder="Nome Completo" style="width: 600px;" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_edv">EDV:</label>
+                    <input type="text" class="form-control" id="id_edv" name="edv" placeholder="EDV" style="width: 600px;" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_cargo">Cargo:</label>
+                    <input type="text" class="form-control" id="id_cargo" name="cargo" placeholder="Cargo" style="width: 600px;" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_setor">Setor:</label>
+                    <input type="text" class="form-control" id="id_setor" name="setor" placeholder="Setor" style="width: 600px;" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_endereco">Endereço:</label>
+                    <input type="text" class="form-control" id="id_endereco" name="endereco" placeholder="Endereço" style="width: 600px;" required>
+                </div>
+            </div>
+            <div class="col">
+                <div class="form-group">
+                    <label for="id_horario_entrada">Horário de Entrada:</label>
+                    <input type="text" class="form-control" id="id_horario_entrada" name="horario_entrada" placeholder="Horário de Entrada" style="width: 200px;" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_horario_saida">Horário de Saída:</label>
+                    <input type="text" class="form-control" id="id_horario_saida" name="horario_saida" placeholder="Horário de Saída" style="width: 200px;" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_data_admissao">Data de Admissão:</label>
+                    <input type="date" class="form-control" id="id_data_admissao" name="data_admissao" style="width: 200px;" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_foto">Foto 3x4:</label>
+                    <img id="preview" src="#" alt="Preview da Foto" style="display: none; max-width: 200px; margin-top: 10px;">
+                    <input type="file" class="form-control-file" id="id_foto" name="foto" onchange="previewImage(this)">                   
+                </div>                
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <a href="{% url 'lista_funcionarios' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+
+<script>
+    function previewImage(input) {
+        var preview = document.getElementById('preview');
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.src = '#';
+            preview.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}
+```
+
+# Código do arquivo deleta_funcionario.html:
+
+``` shell
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1>Confirmação de Exclusão</h1>
+    <p>Tem certeza de que deseja excluir o funcionário "{{ funcionario.nome_completo }}"?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Sim, Excluir</button>
+        <a href="{% url 'lista_funcionarios' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}
+```
+
+# Código do arquivo edita_funcionario.html:
+
+``` shell
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Editar Funcionário</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col">
+                <div class="form-group">
+                    <label for="id_nome_completo">Nome Completo:</label>
+                    <input type="text" class="form-control" id="id_nome_completo" name="nome_completo" value="{{ funcionario.nome_completo }}" placeholder="Nome Completo" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_edv">EDV:</label>
+                    <input type="text" class="form-control" id="id_edv" name="edv" value="{{ funcionario.edv }}" placeholder="EDV" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_cargo">Cargo:</label>
+                    <input type="text" class="form-control" id="id_cargo" name="cargo" value="{{ funcionario.cargo }}" placeholder="Cargo" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_setor">Setor:</label>
+                    <input type="text" class="form-control" id="id_setor" name="setor" value="{{ funcionario.setor }}" placeholder="Setor" required>
+                </div>
+            </div>
+            <div class="col">
+                <div class="form-group">
+                    <label for="id_endereco">Endereço:</label>
+                    <input type="text" class="form-control" id="id_endereco" name="endereco" value="{{ funcionario.endereco }}" placeholder="Endereço" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_horario_entrada">Horário de Entrada:</label>
+                    <input type="text" class="form-control" id="id_horario_entrada" name="horario_entrada" value="{{ funcionario.horario_entrada }}" placeholder="Horário de Entrada" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_horario_saida">Horário de Saída:</label>
+                    <input type="text" class="form-control" id="id_horario_saida" name="horario_saida" value="{{ funcionario.horario_saida }}" placeholder="Horário de Saída" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_data_admissao">Data de Admissão:</label>
+                    <input type="date" class="form-control" id="id_data_admissao" name="data_admissao" value="{{ funcionario.data_admissao }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_foto">Foto 3x4:</label>
+                    <input type="file" class="form-control-file" id="id_foto" name="foto" onchange="previewImage(this)">
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <a href="{% url 'lista_funcionarios' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+
+<script>
+    function previewImage(input) {
+        var preview = document.getElementById('preview');
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+            }
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.src = '#';
+        }
+    }
+</script>
+{% endblock %}
+```
+# Código do arquivo lista_funcionarios.html:
+
+``` shell
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1>Lista de Funcionários</h1>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nome Completo</th>
+                <th>EDV</th>
+                <th>Cargo</th>
+                <th>Setor</th>
+                <th>Endereço</th>
+                <th>Horário de Entrada</th>
+                <th>Horário de Saída</th>
+                <th>Data de Admissão</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for funcionario in funcionarios %}
+            <tr>
+                <td>{{ funcionario.id }}</td>
+                <td>{{ funcionario.nome_completo }}</td>
+                <td>{{ funcionario.edv }}</td>
+                <td>{{ funcionario.cargo }}</td>
+                <td>{{ funcionario.setor }}</td>
+                <td>{{ funcionario.endereco }}</td>
+                <td>{{ funcionario.horario_entrada }}</td>
+                <td>{{ funcionario.horario_saida }}</td>
+                <td>{{ funcionario.data_admissao }}</td>
+                <td>
+                    <a href="{% url 'edita_funcionario' funcionario.id %}" class="btn btn-primary">Editar</a>
+                    <a href="{% url 'deleta_funcionario' funcionario.id %}" class="btn btn-danger">Excluir</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'cria_funcionario' %}" class="btn btn-success">Novo Funcionário</a>
+</div>
+{% endblock %}
+```
+
+# Seguir o modelo anterior e criar API PRODUTOS
+# EM BREVE VOU PUBLICAR NOVAS FUNCIONALIDADES

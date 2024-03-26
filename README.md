@@ -677,7 +677,7 @@ INSTALLED_APPS = [
 
   # Passo 11: Definir o Modelo de Funcionario:
 
-Nesta etapa iremos configurar nossa classe Cliente com os seguintes atributos: **nome_completo, edv, cargo, setor, endereço, horário de entrada, horário de saída, data de admissão, foto.**
+Nesta etapa iremos configurar nossa classe Funcionario com os seguintes atributos: **nome_completo, edv, cargo, setor, endereço, horário de entrada, horário de saída, data de admissão, foto.**
 
 Iremos seguir o tipo de variáveis conforme o tipo do atributo. Veja o exemplo a seguir: 
 
@@ -1198,3 +1198,293 @@ Dentro da pasta `templates/funcionarios` coloque os códigos abaixo conforme cad
 
 # Seguir o modelo anterior e criar API PRODUTOS
 # EM BREVE VOU PUBLICAR NOVAS FUNCIONALIDADES
+
+# Passo 17: Criando API Login.
+
+Para acessar o painel de administração do Django, é necessário possuir uma conta de usuário com a condição de equipe ativa. Para visualizar e criar registros, é essencial que essa conta possua autorizações para gerenciar todos os nossos elementos. Você pode criar uma conta "superadmin" que possua privilégios completos no site e todas as autorizações necessárias utilizando o manage.py.
+
+Execute o seguinte comando, no mesmo diretório que o manage.py, para criar o superadmin. Será solicitado que você forneça um nome de usuário, um endereço de e-mail e uma senha forte.
+
+- Crie o superusuário no terminal digitando o código abaixo:
+  
+``` shell
+python manage.py createsuperuser
+```
+No terminal apresentará o seguinte itens para ser prenchido. 
+
+![](/img/superadmin.PNG)
+
+- preencha o nome do administrador
+- coloque o email
+- a senha precisa ter esses requisitos apresentados na imagem. 
+- depois que completar os requisitos é criado o usuário com sucesso.
+
+Após a criação do usuário administrador, você poderá acessar a área admistrativa do seu projeto.
+- Execute o projeto:
+  
+``` shell
+python manage.py runserver
+```
+
+Acesse o seguinte Admin do seu projeto Django com o seguinte endereço local do seu projeto seguido do /admin.
+
+http://127.0.0.1:8000/admin
+
+![](/img/admin.PNG)
+
+- Digite o ***usuário e senha*** que você criou no terminal.
+
+Agora temos acesso a administração do projeto, com isso podemos criar novos usuários e trabalhar com as permissões de acessos de cada usuário no sistema bem como os tipos de acessos permitidos.
+
+# Crie agora a API de Login e o arquivo login.html conforme as instruções anteriores de criação de cliente e funcionário.
+
+- Vamos criar uma aplicação chamada "login":
+
+``` shell 
+python manage.py startapp login
+  ```
+ou 
+``` shell 
+py manage.py startapp login
+  ```
+
+Abra o arquivo **settings.py** no diretório do projeto (empresa) e adicione o nome do aplicativo "login" à lista **INSTALLED_APPS:**
+
+  ``` shell 
+INSTALLED_APPS = [
+    # ...
+    'clientes',
+    'funcionarios',
+    'login',   
+]
+  ```
+
+# Definir o Modelo de Login:
+
+Abra o **arquivo login/models.py** e defina o modelo de login:
+
+Esse código define uma classe chamada CustomUser que herda da classe AbstractUser, que é fornecida pelo Django e serve como base para o modelo de usuário padrão do Django. Esse usuário deverá ser validado com a informação que estiver no banco de dados.
+As demais informações são configurações padrões que poderão ser alteradas conforme as necessidades.
+
+``` shell
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+
+class CustomUser(AbstractUser):
+    # Seus campos personalizados aqui, se houver
+    def __str__(self):
+        return self.username
+
+    groups = models.ManyToManyField(
+        'auth.Group',
+        verbose_name='groups',
+        blank=True,
+        related_name='customuser_groups',
+        related_query_name='customuser_group',
+        help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.',
+    )
+
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        verbose_name='user permissions',
+        blank=True,
+        related_name='customuser_user_permissions',
+        related_query_name='customuser_user_permission',
+        help_text='Specific permissions for this user.',
+    )
+```
+**Depois de definir o modelo, execute as migrações para criar a tabela no banco de dados:**
+
+- No terminal vc precisa digitar os seguintes comandos para executar as migrações.
+
+``` shell
+python manage.py makemigrations
+  ```
+- Agora na sequência execute o código abaixo para efetivar as novas migrações no sistema e banco.
+
+``` shell
+python manage.py migrate
+  ```
+
+# Criar um Formulário para login:
+
+Crie um arquivo `forms.py` para podermos gerar um formulário personalizado em **login/forms.py:**
+Após criar o arquivo utilize os código abaixo com a estrutura definida para funcionarios. 
+
+``` shell
+from django import forms
+
+class LoginForm(forms.Form):
+    username = forms.CharField(label='Usuário')
+    password = forms.CharField(label='Senha', widget=forms.PasswordInput)
+```
+
+# Criar uma View para login:
+
+- Em **login/views.py**, crie views para autenticar o usuário no sistema:
+
+``` shell
+from django.contrib.auth import authenticate, login
+from django.shortcuts import render, redirect
+from .forms import LoginForm
+
+def user_login(request):
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            user = authenticate(request, username=username, password=password) # verifica essas informações no BD
+            if user is not None:
+                login(request, user)
+                return redirect('clientes/') # redireciona para  página principal do sistema.
+            else:
+                form.add_error(None, 'Nome de usuário ou senha incorretos.')
+    else:
+        form = LoginForm()
+    return render(request, 'login.html', {'form': form})
+```
+# Configurar URLs para login:
+
+Em `**login/urls.py**`, defina as URLs para as views:
+
+Crie um arquivo `urls.py` para podermos gerar as rotas personalizadas em `**login/urls.py:**`
+
+A diante vamos criar os templates de Front-End para manipular todo nosso sistema, mas antes precisamos definir os nome dos formulários e páginas que terão em nosso sistemas.
+
+``` shell
+from django.urls import path
+from . import views
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns = [
+    path('',views.user_login, name='user_login'),
+  ]
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+```
+
+
+# Configurar Apps para login:
+
+Em `**login/apps.py**`, defina as configurações de autenciação de login do Django:
+
+Esse código define uma configuração para a aplicação chamada "login" dentro de um projeto Django. A classe LoginConfig herda da classe AppConfig do Django. Nessa configuração:
+
+- default_auto_field é definido como "django.db.models.BigAutoField", especificando o tipo de campo a ser usado como chave primária automática para os modelos desta aplicação. No caso, está usando BigAutoField, que é uma chave primária autoincremental de grande escala.
+
+- name é definido como "login", que é o nome da aplicação. Essa é uma convenção do Django para identificar a aplicação dentro do projeto.
+
+``` shell
+from django.apps import AppConfig
+
+class LoginConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "login"
+```
+
+# Crie o html de login:
+
+- Crie o HTML em **`login/templates/registration`** 
+
+
+``` shell
+{% block content %}
+{% load static %}
+<style>
+    
+    .container {
+        max-width: 400px; /* Largura máxima do conteúdo na página */
+        margin: 0 auto; /* Centralizar o conteúdo na página */
+        padding: 20px; /* Espaçamento interno para melhor visualização */
+        text-align: center; /* Centralizar texto e elementos */
+    }
+
+    .logo {
+        width: 300px; /* Tamanho da logo */
+        margin-bottom: 20px; /* Espaçamento inferior */
+    }
+
+    .form-group {
+        margin-bottom: 20px; /* Espaçamento inferior entre os campos */
+    }
+
+    .form-control {
+        width: 400px; /* Largura dos inputs */
+        display: block; /* Garantir que o input ocupe toda a largura disponível */
+        margin: 0 auto; /* Centralizar o input horizontalmente */
+    }
+
+    .btn-primary {
+        width: 30%; /* Botão de largura total */
+    }
+
+    .error-message {
+        color: red ; /* Cor do texto de erro */        
+    }
+</style>
+
+<div class="container">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">  
+    <header>
+        <img src="{% static 'logobosch.png' %}" alt="Logo Bosch" class="logo">
+    </header>
+
+    <h1>Login de Acesso ao Sistema</h1>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="id_username">Usuário:</label>
+            <input type="text" class="form-control" id="id_username" name="username" placeholder="Username" required>
+        </div>
+        <div class="form-group">
+            <label for="id_password">Password:</label>
+            <input type="password" class="form-control" id="id_password" name="password" placeholder="Password" required>
+        </div>
+        {% if form.errors %}
+        <div class="error-message">
+            <p>Nome de usuário ou senha incorretos.</p>
+        </div>
+        {% endif %}
+        <button type="submit" class="btn btn-primary">Entrar</button>
+    </form>
+</div>
+
+{% endblock %}
+
+```
+# Configurando o arquivo settings.py do projeto Empresa.
+
+- Adcione a seguinte linha de código 
+  
+``` shell
+LOGIN_REDIRECT_URL = '/clientes/'  # Ou Substitua '/clientes/' pela URL desejada
+
+```
+# Configurando o arquivo urls.py do projeto Empresa.
+
+- Neste código foi definido que a tela de login será a tela inicial do projeto. 
+
+``` shell
+from django.contrib import admin
+from django.urls import path, include
+from django.shortcuts import redirect, render
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('clientes/', include('clientes.urls')),
+    path('funcionarios/', include('funcionarios.urls')),
+    path('login/', include('login.urls')),
+    path('sobre/', lambda request: render(request,'clientes/sobre.html'), name='sobre'),  
+    path('', lambda request: redirect('login'), name='home'),  # Redireciona para a página de login
+    path('accounts/', include('django.contrib.auth.urls')),    
+  
+]
+
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+```
